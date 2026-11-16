@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NetPulse</title>
+<script>try{var t=localStorage.getItem("np-theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<style>
+:root{--bg:#0b1220;--panel:#111a2c;--panel2:#16233a;--line:#22314d;--text:#e8eefc;--mut:#8fa0c0;--accent:#3b82f6;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444}
+[data-theme="light"]{--bg:#f3f6fb;--panel:#ffffff;--panel2:#f1f5fb;--line:#dde5f1;--text:#101828;--mut:#5b6b86;--accent:#2563eb}
+*{box-sizing:border-box}
+body{margin:0;display:flex;min-height:100vh;background:var(--bg);color:var(--text);font-family:Inter,"Segoe UI",Arial,sans-serif}
+aside{width:232px;flex:0 0 232px;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:18px 12px;position:sticky;top:0;height:100vh}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 10px 20px;font-weight:800;font-size:20px;letter-spacing:.5px}
+.brand i{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,var(--accent),#7c3aed);display:grid;place-items:center;font-style:normal;font-size:16px}
+.nav a{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;color:var(--mut);cursor:pointer;margin-bottom:4px;font-size:14px;font-weight:600}
+.nav a:hover{background:var(--panel2);color:var(--text)}
+.nav a.on{background:var(--accent);color:#fff}
+.nav .badge{margin-left:auto;background:var(--bad);color:#fff;border-radius:10px;font-size:11px;padding:1px 8px}
+.sfoot{margin-top:auto;font-size:12px;color:var(--mut);padding:10px;line-height:1.7}
+.sfoot code{color:var(--accent)}
+main{flex:1;min-width:0}
+.top{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:12px;padding:14px 28px;background:var(--bg);border-bottom:1px solid var(--line)}
+.top input{flex:1;max-width:440px;padding:10px 14px;background:var(--panel);border:1px solid var(--line);border-radius:10px;color:var(--text);outline:none}
+.top .sp{flex:1}
+.live{font-size:12px;color:var(--ok);white-space:nowrap}
+.live.off{color:var(--bad)}
+.btn{background:var(--accent);color:#fff;border:0;padding:10px 16px;border-radius:10px;font-weight:700;cursor:pointer}
+.btn:hover{filter:brightness(1.1)}
+.btn.ghost{background:var(--panel);color:var(--text);border:1px solid var(--line)}
+.page{padding:24px 28px 20px}
+.view{display:none}
+.view.on{display:block}
+.ptitle{margin:0 0 4px;font-size:30px}
+.psub{color:var(--mut);margin:0 0 20px}
+.cur{display:inline-block;width:3px;height:28px;background:var(--accent);margin-left:5px;vertical-align:middle;animation:blink .8s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;cursor:pointer;transition:transform .2s,border-color .2s}
+.kpi:hover{transform:translateY(-3px);border-color:var(--accent)}
+.kpi b{display:block;font-size:32px;line-height:1.1}
+.kpi span{color:var(--mut);font-size:13px}
+.kpi.ok b{color:var(--ok)}
+.kpi.bad b{color:var(--bad)}
+.kpi.warn b{color:var(--warn)}
+.kpi.acc b{color:var(--accent)}
+.gauges,.g2{display:grid;gap:16px;margin-top:16px}
+.gauges{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+.g2{grid-template-columns:repeat(auto-fit,minmax(330px,1fr))}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+.panel h3{margin:0 0 4px;font-size:16px}
+.sub{color:var(--mut);font-size:13px;margin-bottom:14px}
+.gauge{display:flex;align-items:center;gap:16px}
+.gauge .gt b{display:block;font-size:15px}
+.gauge .gt span{color:var(--mut);font-size:13px}
+.g-bg{fill:none;stroke:var(--line);stroke-width:10}
+.g-fg{fill:none;stroke-width:10;stroke-linecap:round;transform:rotate(-90deg);transform-origin:55px 55px;transition:stroke-dasharray .8s}
+.g-t{font-size:22px;font-weight:700;fill:var(--text)}
+.bar{display:flex;align-items:center;gap:12px;margin:10px 0;font-size:14px}
+.bar label{width:100px;color:var(--mut)}
+.bar div{height:12px;background:var(--accent);border-radius:6px;transition:width .6s}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:12px;border-bottom:1px solid var(--line);font-size:14px;white-space:nowrap}
+tr:hover td{background:var(--panel2)}
+td code{font-family:Consolas,monospace;color:var(--accent)}
+td.ta{text-align:right}
+td .ic{margin-right:10px}
+.pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:700}
+.pill.online{background:rgba(34,197,94,.15);color:var(--ok)}
+.pill.offline,.pill.critical{background:rgba(239,68,68,.15);color:var(--bad)}
+.pill.maintenance,.pill.warning{background:rgba(245,158,11,.18);color:var(--warn)}
+.ibtn{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:5px 11px;cursor:pointer;font-size:12px;margin-left:6px}
+.ibtn:hover{border-color:var(--accent)}
+.ibtn.dng:hover{background:var(--bad);border-color:var(--bad);color:#fff}
+.tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.tools .grow{flex:1}
+.tools select{padding:9px;background:var(--panel);border:1px solid var(--line);border-radius:8px;color:var(--text)}
+.chip{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:20px;padding:7px 16px;cursor:pointer}
+.chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+.mini{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px;flex-wrap:wrap}
+.mini:last-child{border-bottom:0}
+.mini .dt{flex:1;min-width:140px}
+.mini small{color:var(--mut)}
+.tag{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:2px 10px;font-size:12px;white-space:nowrap}
+.empty{color:var(--mut);padding:12px 0}
+.legend{display:flex;gap:18px;margin-bottom:12px;color:var(--mut);font-size:13px;flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+.topo{width:100%;height:auto;background:var(--panel2);border-radius:12px;border:1px solid var(--line)}
+.topo text{fill:var(--text);font-size:11px;text-anchor:middle}
+.topo .l-hub{stroke:var(--line);stroke-width:2}
+.topo .hub{fill:var(--accent)}
+.topo .sn{fill:var(--panel);stroke:var(--accent);stroke-width:2}
+.topo .dn{cursor:pointer;stroke:var(--panel);stroke-width:2}
+.topo .dn:hover{stroke:var(--text)}
+.modal,.pal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;z-index:50}
+.modal{align-items:center;justify-content:center}
+.pal{align-items:flex-start;justify-content:center;padding-top:14vh;z-index:60}
+.modal.on,.pal.on{display:flex}
+.modal form{background:var(--panel);border:1px solid var(--line);padding:26px;border-radius:14px;width:390px;max-width:92vw;display:flex;flex-direction:column;gap:12px}
+.modal input,.modal select{padding:11px;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:8px}
+.pbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:560px;max-width:92vw;overflow:hidden}
+.pbox input{width:100%;padding:16px 18px;background:var(--panel2);border:0;border-bottom:1px solid var(--line);color:var(--text);font-size:16px;outline:none}
+.pl{max-height:340px;overflow-y:auto}
+.pi{display:flex;justify-content:space-between;padding:11px 18px;cursor:pointer}
+.pi.on{background:var(--accent);color:#fff}
+.pi span{color:var(--mut);font-size:13px}
+.pi.on span{color:#fff}
+.msgs{display:flex;flex-direction:column;gap:10px;min-height:280px;max-height:56vh;overflow-y:auto;padding:4px}
+.msg{max-width:80%;padding:10px 14px;border-radius:14px;font-size:14px;line-height:1.55;white-space:pre-line}
+.msg.u{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:4px}
+.msg.b{align-self:flex-start;background:var(--panel2);border:1px solid var(--line);border-bottom-left-radius:4px}
+.msg .dv{margin-top:8px;display:flex;flex-direction:column;gap:6px}
+.msg .dv div{display:flex;gap:8px;align-items:center;font-size:13px}
+.msg .cf{margin-top:10px;display:flex;gap:8px}
+.sugg{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.sg{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:16px;padding:6px 12px;cursor:pointer;font-size:12px}
+.sg:hover{border-color:var(--accent)}
+.askrow{display:flex;gap:10px}
+.askrow input{flex:1;padding:12px 14px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;color:var(--text);outline:none}
+.insl{margin:0;padding-left:18px;line-height:1.9;font-size:14px}
+.ticker{overflow:hidden;white-space:nowrap;background:var(--panel);border:1px solid var(--line);border-radius:10px;margin:0 0 18px;padding:10px 0}
+.ticker span{display:inline-block;padding-left:100%;animation:tick 20s linear infinite;color:var(--accent);font-weight:700;letter-spacing:.3px}
+@keyframes tick{to{transform:translateX(-100%)}}
+.tr{width:100%;height:auto}
+.tr text{fill:var(--mut);font-size:11px}
+.tr .gl{stroke:var(--line);stroke-width:1}
+.tleg{display:flex;gap:18px;flex-wrap:wrap;color:var(--mut);font-size:13px;margin-bottom:8px}
+.tleg i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+@media(max-width:860px){body{flex-direction:column}aside{width:100%;flex:none;height:auto;position:static;flex-direction:row;align-items:center;overflow-x:auto;padding:8px}.nav{display:flex;gap:6px}.nav a{margin:0;white-space:nowrap}.brand{padding:4px 8px}.sfoot{display:none}.top{position:static;flex-wrap:wrap}}
+</style></head><body>
+<aside>
+ <div class="brand"><i>📡</i>NetPulse</div>
+ <div class="nav">
+  <a id="n-dashboard" class="on" onclick="show('dashboard')">📊 Dashboard</a>
+  <a id="n-devices" onclick="show('devices')">🖥️ Devices</a>
+  <a id="n-alerts" onclick="show('alerts')">🚨 Alerts <span class="badge" id="nb">0</span></a>
+  <a id="n-topology" onclick="show('topology')">🕸️ Topology</a>
+  <a id="n-activity" onclick="show('activity')">🕒 Activity</a>
+ </div>
+ <div class="sfoot" id="foot"></div>
+</aside>
+<main>
+ <div class="top">
+  <input id="q" placeholder="Search devices by name, IP or location..." oninput="onSearch()">
+  <div class="sp"></div>
+  <span class="live" id="live">● Live</span>
+  <button class="btn ghost" onclick="openPal()">Ctrl + K</button>
+  <button class="btn ghost" id="tbtn" onclick="toggleTheme()">☀️ Light</button>
+  <button class="btn" onclick="openAdd()">+ Add Device</button>
+ </div>
+ <div class="page">
+  <div class="ticker"><span id="ticker"></span></div>
+
+  <section class="view on" id="v-dashboard">
+   <h1 class="ptitle"><span id="tw"></span><span class="cur"></span></h1>
+   <p class="psub">Live overview of your network devices. Every change is tested and deployed automatically by a GitLab CI/CD pipeline.</p>
+   <div class="kpis" id="kpis"></div>
+   <div class="gauges" id="gauges"></div>
+   <div class="panel" style="margin-top:16px"><h3>Availability trend</h3><div class="sub">Snapshots of device status, recorded on every change and every 5 minutes while the app is open</div><div id="trend"></div></div>
+   <div class="g2">
+    <div class="panel"><h3>Insights</h3><div class="sub">Auto-generated summary (rule-based)</div><div id="ins"></div></div>
+    <div class="panel"><h3>Needs attention</h3><div class="sub">Offline and maintenance devices</div><div id="dalerts"></div></div>
+    <div class="panel"><h3>Devices by type</h3><div class="sub">Inventory breakdown</div><div id="br"></div></div>
+    <div class="panel"><h3>System health</h3><div class="sub">The app itself, separate from network health</div><div id="sys"></div></div>
+    <div class="panel"><h3>Recent activity</h3><div class="sub">Latest changes</div><div id="dact"></div></div>
+   </div>
+  </section>
+
+  <section class="view" id="v-devices">
+   <h1 class="ptitle">Devices</h1>
+   <p class="psub">Manage all registered network devices.</p>
+   <div class="panel">
+    <div class="tools">
+     <button class="chip on" data-f="All" onclick="setF('All')">All</button>
+     <button class="chip" data-f="Online" onclick="setF('Online')">Online</button>
+     <button class="chip" data-f="Offline" onclick="setF('Offline')">Offline</button>
+     <button class="chip" data-f="Maintenance" onclick="setF('Maintenance')">Maintenance</button>
+     <span class="grow"></span>
+     <span class="sub" id="dcount" style="margin:0"></span>
+     <a class="btn ghost" href="/export/devices.csv" download style="text-decoration:none;display:inline-block">⬇ Download CSV</a>
+     <label class="btn ghost" style="display:inline-block;cursor:pointer">⬆ Import CSV<input type="file" id="impf" accept=".csv,text/csv" style="display:none"></label>
+     <div id="impmsg" class="sub" style="width:100%;margin:0;order:99"></div>
+     <select id="sort" onchange="renderDevices()">
+      <option value="new">Newest</option>
+      <option value="name">Name A-Z</option>
+      <option value="status">Problems first</option>
+     </select>
+    </div>
+    <div class="tw"><table>
+     <thead><tr><th>Device</th><th>Type</th><th>IP address</th><th>Status</th><th>Location</th><th></th></tr></thead>
+     <tbody id="dbody"></tbody>
+    </table></div>
+   </div>
+  </section>
+
+  <section class="view" id="v-alerts">
+   <h1 class="ptitle">Alerts</h1>
+   <p class="psub">Offline devices are Critical. Devices in maintenance are Warnings.</p>
+   <div class="panel">
+    <div class="tools">
+     <button class="chip on" data-a="All" onclick="setA('All')">All</button>
+     <button class="chip" data-a="Critical" onclick="setA('Critical')">Critical</button>
+     <button class="chip" data-a="Warning" onclick="setA('Warning')">Warning</button>
+    </div>
+    <div class="tw"><table>
+     <thead><tr><th>Severity</th><th>Device</th><th>IP address</th><th>Message</th><th>Location</th><th></th></tr></thead>
+     <tbody id="abody"></tbody>
+    </table></div>
+   </div>
+  </section>
+
+  <section class="view" id="v-topology">
+   <h1 class="ptitle">Topology</h1>
+   <p class="psub">Auto-generated site map: devices grouped by location around the network hub. Click a device to edit it.</p>
+   <div class="panel">
+    <div class="legend">
+     <span><i style="background:#22c55e"></i>Online</span>
+     <span><i style="background:#ef4444"></i>Offline</span>
+     <span><i style="background:#f59e0b"></i>Maintenance</span>
+    </div>
+    <div id="topo"></div>
+   </div>
+  </section>
+
+  <section class="view" id="v-assistant">
+   <h1 class="ptitle">Assistant</h1>
+   <p class="psub">Ask about your devices or the project. This is a rule-based assistant: it understands common questions and asks you to confirm before it changes anything.</p>
+   <div class="panel">
+    <div class="msgs" id="msgs"></div>
+    <div class="sugg" id="sugg"></div>
+    <div class="askrow"><input id="ask" placeholder="Ask something, for example: How many devices are offline?" autocomplete="off"><button class="btn" id="askbtn">Send</button></div>
+   </div>
+  </section>
+
+  <section class="view" id="v-activity">
+   <h1 class="ptitle">Activity</h1>
+   <p class="psub">Audit trail of recent changes.</p>
+   <div class="panel" id="aact"></div>
+  </section>
+
+ </div>
+</main>
+
+<div class="modal" id="m"><form id="f" method="post" action="/add">
+ <h3 id="mt" style="margin:0">Add Device</h3>
+ <input name="name" id="fn" placeholder="Device name (e.g. BLR-CORE-RTR-01)" required>
+ <input name="ip" id="fi" placeholder="IP address (e.g. 10.10.1.1)" required>
+ <select name="dtype" id="ft">
+  <option>Router</option><option>Switch</option><option>Firewall</option>
+  <option>Base Station</option><option>Server</option><option>Other</option>
+ </select>
+ <input name="location" id="fl" placeholder="Location (e.g. Bengaluru)">
+ <select name="status" id="fs">
+  <option>Online</option><option>Offline</option><option>Maintenance</option>
+ </select>
+ <button class="btn">Save</button>
+ <button type="button" class="btn ghost" onclick="closeM()">Cancel</button>
+</form></div>
+<form id="df" method="post" style="display:none"></form>
+
+<div class="pal" id="pal" onclick="if(event.target===this)closePal()">
+ <div class="pbox">
+  <input id="pq" placeholder="Type a command or search a device..." autocomplete="off">
+  <div class="pl" id="pl"></div>
+ </div>
+</div>
+
+<script>
+let S = {{ state|tojson }};
+const ICON = {"Router":"📡","Switch":"🔀","Firewall":"🛡️","Base Station":"📶","Server":"🖥️"};
+const VIEWS = ["dashboard", "devices", "alerts", "topology", "activity", "assistant"];
+const $ = id => document.getElementById(id);
+const esc = t => String(t == null ? "" : t).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let flt = "All", aflt = "All", view = "dashboard", PL = [], pidx = 0;
+
+function setTheme(t){
+  document.documentElement.setAttribute("data-theme", t);
+  try { localStorage.setItem("np-theme", t); } catch (e) {}
+  $("tbtn").textContent = t === "dark" ? "☀️ Light" : "🌙 Dark";
+}
+function toggleTheme(){ setTheme(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark"); }
+
+function ago(iso){
+  const s = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
+  if (s < 60) return s + "s ago";
+  if (s < 3600) return Math.floor(s / 60) + "m ago";
+  if (s < 86400) return Math.floor(s / 3600) + "h ago";
+  return Math.floor(s / 86400) + "d ago";
+}
+
+function show(v){
+  if (VIEWS.indexOf(v) < 0) v = "dashboard";
+  view = v;
+  VIEWS.forEach(x => { $("v-" + x).classList.toggle("on", x === v); $("n-" + x).classList.toggle("on", x === v); });
+  if (location.hash !== "#" + v) history.replaceState(null, "", "#" + v);
+  window.scrollTo(0, 0);
+}
+function onSearch(){ if (view !== "devices") show("devices"); renderDevices(); }
+function setF(f){
+  flt = f;
+  document.querySelectorAll("#v-devices .chip").forEach(b => b.classList.toggle("on", b.dataset.f === f));
+  renderDevices();
+}
+function setA(f){
+  aflt = f;
+  document.querySelectorAll("#v-alerts .chip").forEach(b => b.classList.toggle("on", b.dataset.a === f));
+  renderAlertsView();
+}
+function goFilter(f){ setF(f); show("devices"); }
+
+function gauge(pct, color){
+  const r = 44, C = 2 * Math.PI * r, d = Math.max(0, Math.min(100, pct)) / 100 * C;
+  return '<svg viewBox="0 0 110 110" width="104" height="104"><circle cx="55" cy="55" r="44" class="g-bg"/>'
+    + '<circle cx="55" cy="55" r="44" class="g-fg" style="stroke:' + color + ';stroke-dasharray:' + d.toFixed(1) + ' ' + C.toFixed(1) + '"/>'
+    + '<text x="55" y="62" text-anchor="middle" class="g-t">' + Math.round(pct) + '%</text></svg>';
+}
+
+function renderKpis(){
+  const t = S.stats;
+  const k = [["Total devices", t.total, "acc", "All"], ["Online", t.online, "ok", "Online"], ["Offline", t.offline, "bad", "Offline"], ["Maintenance", t.maintenance, "warn", "Maintenance"], ["Active alerts", S.alerts.length, "bad", "alerts"]];
+  $("kpis").innerHTML = k.map(x => '<div class="kpi ' + x[2] + '" onclick="' + (x[3] === "alerts" ? "show('alerts')" : "goFilter('" + x[3] + "')") + '"><b>' + x[1] + '</b><span>' + x[0] + '</span></div>').join("");
+}
+
+function renderGauges(){
+  const t = S.stats, p = n => t.total ? n * 100 / t.total : 0;
+  const g = [["Network health", "Devices currently online", t.health, "#22c55e"], ["Offline", "Devices unreachable", p(t.offline), "#ef4444"], ["In maintenance", "Planned downtime", p(t.maintenance), "#f59e0b"]];
+  $("gauges").innerHTML = g.map(x => '<div class="panel gauge">' + gauge(x[2], x[3]) + '<div class="gt"><b>' + x[0] + '</b><span>' + x[1] + '</span></div></div>').join("");
+}
+
+function renderDAlerts(){
+  const a = S.alerts.slice(0, 5);
+  $("dalerts").innerHTML = a.length ? a.map(x => '<div class="mini"><span class="pill ' + x.severity.toLowerCase() + '">' + esc(x.severity) + '</span><b>' + esc(x.device) + '</b><span class="dt">' + esc(x.message) + '</span><button class="ibtn" onclick="openEdit(' + x.id + ')">Resolve</button></div>').join("") : '<div class="empty">All devices are healthy. 🎉</div>';
+}
+
+function renderTypes(){
+  const b = {};
+  S.devices.forEach(d => { const k = d.dtype || "Other"; b[k] = (b[k] || 0) + 1; });
+  const keys = Object.keys(b);
+  const mx = Math.max(1, ...Object.values(b));
+  $("br").innerHTML = keys.length ? keys.map(k => '<div class="bar"><label>' + esc(k) + '</label><div style="width:' + (b[k] / mx * 70) + '%"></div><span>' + b[k] + '</span></div>').join("") : '<div class="empty">No devices yet.</div>';
+}
+
+function actHtml(list){
+  return list.length ? list.map(a => '<div class="mini"><span class="tag">' + esc(a.action) + '</span><span class="dt">' + esc(a.detail) + '</span><small>' + ago(a.ts) + '</small></div>').join("") : '<div class="empty">No activity yet.</div>';
+}
+function renderActs(){ $("dact").innerHTML = actHtml(S.activity.slice(0, 6)); $("aact").innerHTML = actHtml(S.activity); }
+
+function renderDevices(){
+  const q = $("q").value.toLowerCase(), so = $("sort").value;
+  let l = S.devices.filter(d => (d.name + " " + d.ip + " " + (d.location || "") + " " + (d.dtype || "")).toLowerCase().includes(q))
+                   .filter(d => flt === "All" || d.status === flt);
+  const rank = {"Offline": 0, "Maintenance": 1, "Online": 2};
+  if (so === "name") l.sort((a, b) => a.name.localeCompare(b.name));
+  else if (so === "status") l.sort((a, b) => rank[a.status] - rank[b.status]);
+  $("dcount").textContent = l.length + " of " + S.devices.length + " devices";
+  $("dbody").innerHTML = l.length ? l.map(d => '<tr><td><span class="ic">' + (ICON[d.dtype] || "🔌") + '</span><b>' + esc(d.name) + '</b></td><td>' + esc(d.dtype || "Other") + '</td><td><code>' + esc(d.ip) + '</code></td><td><span class="pill ' + d.status.toLowerCase() + '">' + esc(d.status) + '</span></td><td>' + esc(d.location || "-") + '</td><td class="ta"><button class="ibtn" onclick="openEdit(' + d.id + ')">Edit</button><button class="ibtn dng" onclick="del(' + d.id + ')">Delete</button></td></tr>').join("") : '<tr><td colspan="6" class="empty">No devices found. Click + Add Device.</td></tr>';
+}
+
+function renderAlertsView(){
+  const a = S.alerts.filter(x => aflt === "All" || x.severity === aflt);
+  $("abody").innerHTML = a.length ? a.map(x => '<tr><td><span class="pill ' + x.severity.toLowerCase() + '">' + esc(x.severity) + '</span></td><td><b>' + esc(x.device) + '</b></td><td><code>' + esc(x.ip) + '</code></td><td>' + esc(x.message) + '</td><td>' + esc(x.location || "-") + '</td><td class="ta"><button class="ibtn" onclick="openEdit(' + x.id + ')">Resolve</button></td></tr>').join("") : '<tr><td colspan="6" class="empty">No active alerts. All devices are healthy. 🎉</td></tr>';
+}
+
+function renderTopo(){
+  const dv = S.devices;
+  if (!dv.length) { $("topo").innerHTML = '<div class="empty">Add devices to see the site map.</div>'; return; }
+  const groups = {};
+  dv.forEach(d => { const k = (d.location || "").trim() || "Unassigned"; (groups[k] = groups[k] || []).push(d); });
+  const keys = Object.keys(groups), n = keys.length;
+  const W = 900, H = 560, cx = 450, cy = 280;
+  const col = s => s === "Online" ? "#22c55e" : (s === "Offline" ? "#ef4444" : "#f59e0b");
+  let lines = "", nodes = "";
+  keys.forEach((k, i) => {
+    const a = 2 * Math.PI * i / n - Math.PI / 2;
+    const sx = n === 1 ? cx : cx + 280 * Math.cos(a);
+    const sy = n === 1 ? cy - 150 : cy + 170 * Math.sin(a);
+    const list = groups[k], m = list.length, rr = 40 + Math.min(m, 14) * 3;
+    lines += '<line class="l-hub" x1="' + cx + '" y1="' + cy + '" x2="' + sx.toFixed(1) + '" y2="' + sy.toFixed(1) + '"/>';
+    list.forEach((d, j) => {
+      const b = 2 * Math.PI * j / m - Math.PI / 2;
+      const dx = sx + rr * Math.cos(b), dy = sy + rr * Math.sin(b);
+      lines += '<line x1="' + sx.toFixed(1) + '" y1="' + sy.toFixed(1) + '" x2="' + dx.toFixed(1) + '" y2="' + dy.toFixed(1) + '" style="stroke:' + col(d.status) + ';stroke-opacity:.55;stroke-width:1.5"' + (d.status === "Offline" ? ' stroke-dasharray="4 3"' : "") + '/>';
+      nodes += '<circle class="dn" cx="' + dx.toFixed(1) + '" cy="' + dy.toFixed(1) + '" r="8" style="fill:' + col(d.status) + '" onclick="openEdit(' + d.id + ')"><title>' + esc(d.name + " | " + d.ip + " | " + d.status) + '</title></circle>';
+    });
+    nodes += '<circle class="sn" cx="' + sx.toFixed(1) + '" cy="' + sy.toFixed(1) + '" r="15"/><text x="' + sx.toFixed(1) + '" y="' + (sy + 4).toFixed(1) + '">' + m + '</text>';
+    nodes += '<text x="' + sx.toFixed(1) + '" y="' + (sy - rr - 14).toFixed(1) + '" style="font-weight:700">' + esc(k) + '</text>';
+  });
+  nodes += '<circle class="hub" cx="' + cx + '" cy="' + cy + '" r="24"/><text x="' + cx + '" y="' + (cy + 4) + '" style="fill:#fff;font-weight:700">HUB</text>';
+  $("topo").innerHTML = '<svg class="topo" viewBox="0 0 ' + W + ' ' + H + '">' + lines + nodes + '</svg>';
+}
+
+function renderFoot(){
+  const v = S.version;
+  $("foot").innerHTML = 'NetPulse ' + esc(v.app) + '<br>build <code>' + esc(v.commit) + '</code><br>up since ' + esc(new Date(v.started).toLocaleString()) + '<br>Deployed by GitLab CI/CD';
+}
+
+function renderAll(){
+  renderKpis(); renderGauges(); renderDAlerts(); renderTypes(); renderActs();
+  renderDevices(); renderAlertsView(); renderTopo(); renderFoot(); renderInsights(); renderSystem(); renderTrend(); renderBanner();
+  $("nb").textContent = S.alerts.length; $("nb").style.display = S.alerts.length ? "" : "none";
+}
+
+function openAdd(){ $("f").reset(); $("f").action = "/add"; $("mt").textContent = "Add Device"; $("m").classList.add("on"); }
+function openEdit(id){
+  const d = S.devices.find(x => x.id === id);
+  if (!d) return;
+  $("f").action = "/edit/" + id; $("mt").textContent = "Edit Device";
+  $("fn").value = d.name; $("fi").value = d.ip; $("fl").value = d.location || "";
+  $("ft").value = d.dtype || "Other"; $("fs").value = d.status;
+  $("m").classList.add("on");
+}
+function closeM(){ $("m").classList.remove("on"); }
+function del(id){ if (confirm("Delete this device?")) { $("df").action = "/delete/" + id; $("df").submit(); } }
+
+function actions(){
+  return [
+    {t: "➕ Add device", k: "add new create", run: openAdd},
+    {t: "Go to Dashboard", k: "home overview", run: () => show("dashboard")},
+    {t: "Go to Devices", k: "inventory list", run: () => show("devices")},
+    {t: "Go to Alerts", k: "alerts incidents", run: () => show("alerts")},
+    {t: "Go to Topology", k: "map sites", run: () => show("topology")},
+    {t: "Go to Activity log", k: "audit history", run: () => show("activity")},
+    {t: "Ask the assistant", k: "assistant chat ask", run: () => show("assistant")},
+    {t: "Show Offline devices", k: "offline down", run: () => goFilter("Offline")},
+    {t: "Show Online devices", k: "online up", run: () => goFilter("Online")},
+    {t: "Show Maintenance devices", k: "maintenance", run: () => goFilter("Maintenance")},
+    {t: "Switch light / dark theme", k: "theme dark light mode", run: toggleTheme}
+  ];
+}
+function paletteItems(q){
+  q = q.toLowerCase();
+  const a = actions().filter(x => (x.t + " " + x.k).toLowerCase().includes(q)).map(x => ({label: x.t, hint: "Action", run: x.run}));
+  const d = q ? S.devices.filter(x => (x.name + " " + x.ip + " " + (x.location || "")).toLowerCase().includes(q)).slice(0, 6).map(x => ({label: x.name, hint: x.ip + " · " + x.status, run: () => openEdit(x.id)})) : [];
+  return a.concat(d);
+}
+function renderPal(){
+  PL = paletteItems($("pq").value);
+  if (pidx >= PL.length) pidx = 0;
+  $("pl").innerHTML = PL.length ? PL.map((x, i) => '<div class="pi' + (i === pidx ? ' on' : '') + '" onclick="runPal(' + i + ')"><b>' + esc(x.label) + '</b><span>' + esc(x.hint) + '</span></div>').join("") : '<div class="empty" style="padding:14px 18px">No results</div>';
+}
+function openPal(){ $("pal").classList.add("on"); $("pq").value = ""; pidx = 0; renderPal(); $("pq").focus(); }
+function closePal(){ $("pal").classList.remove("on"); }
+function runPal(i){ const x = PL[i]; if (!x) return; closePal(); x.run(); }
+
+$("pq").addEventListener("input", () => { pidx = 0; renderPal(); });
+$("pq").addEventListener("keydown", e => {
+  if (e.key === "ArrowDown") { e.preventDefault(); pidx = Math.min(pidx + 1, PL.length - 1); renderPal(); }
+  else if (e.key === "ArrowUp") { e.preventDefault(); pidx = Math.max(pidx - 1, 0); renderPal(); }
+  else if (e.key === "Enter") { e.preventDefault(); runPal(pidx); }
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") { closeM(); closePal(); }
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); openPal(); }
+});
+
+async function refresh(){
+  if ($("m").classList.contains("on") || $("pal").classList.contains("on")) return;
+  try {
+    const r = await fetch("/api/state", {cache: "no-store"});
+    if (!r.ok) throw new Error("bad status");
+    S = await r.json();
+    renderAll();
+    $("live").className = "live"; $("live").textContent = "● Live · " + new Date().toLocaleTimeString();
+  } catch (e) {
+    $("live").className = "live off"; $("live").textContent = "● Reconnecting...";
+  }
+}
+setInterval(refresh, 10000);
+
+function renderTrend(){
+  const t = S.trend || [];
+  const box = $("trend");
+  if (t.length < 2) { box.innerHTML = '<div class="empty">Collecting data... a new point is added on every change and every 5 minutes.</div>'; return; }
+  const W = 640, H = 230, L = 36, R = 12, T = 12, B = 30;
+  const mx = Math.max(1, ...t.map(p => Math.max(p.online, p.offline, p.maintenance)));
+  const x = i => L + (W - L - R) * i / (t.length - 1);
+  const y = v => T + (H - T - B) * (1 - v / mx);
+  const line = (key, color) => '<polyline fill="none" stroke="' + color + '" stroke-width="2.5" stroke-linejoin="round" points="' + t.map((p, i) => x(i).toFixed(1) + "," + y(p[key]).toFixed(1)).join(" ") + '"/>'
+    + t.map((p, i) => '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(p[key]).toFixed(1) + '" r="3" fill="' + color + '"><title>' + esc(new Date(p.ts).toLocaleString() + ": " + key + " " + p[key]) + '</title></circle>').join("");
+  let grid = "";
+  [0, 0.5, 1].forEach(f => {
+    const v = Math.round(mx * f), yy = y(v);
+    grid += '<line class="gl" x1="' + L + '" y1="' + yy.toFixed(1) + '" x2="' + (W - R) + '" y2="' + yy.toFixed(1) + '"/><text x="' + (L - 6) + '" y="' + (yy + 4).toFixed(1) + '" text-anchor="end">' + v + '</text>';
+  });
+  const tm = p => new Date(p.ts).toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"});
+  const labels = '<text x="' + L + '" y="' + (H - 8) + '" text-anchor="start">' + esc(tm(t[0])) + '</text><text x="' + (W - R) + '" y="' + (H - 8) + '" text-anchor="end">' + esc(tm(t[t.length - 1])) + '</text>';
+  box.innerHTML = '<div class="tleg"><span><i style="background:#22c55e"></i>Online</span><span><i style="background:#ef4444"></i>Offline</span><span><i style="background:#f59e0b"></i>Maintenance</span><span>' + t.length + ' snapshots</span></div>'
+    + '<svg class="tr" viewBox="0 0 ' + W + " " + H + '">' + grid + line("online", "#22c55e") + line("offline", "#ef4444") + line("maintenance", "#f59e0b") + labels + '</svg>';
+}
+
+function renderBanner(){
+  const t = S.banner || "";
+  if ($("ticker").textContent !== t) $("ticker").textContent = t;
+}
+
+function fmtUp(s){
+  s = Math.max(0, Math.floor(s));
+  const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60);
+  return (d ? d + "d " : "") + (h || d ? h + "h " : "") + m + "m " + (s % 60) + "s";
+}
+function renderSystem(){
+  const y = S.system;
+  if (!y) { $("sys").innerHTML = '<div class="empty">No data.</div>'; return; }
+  const row = (k, v, ok) => '<div class="mini"><span class="dt">' + esc(k) + '</span>' + (ok === undefined ? '<b>' + esc(v) + '</b>' : '<span class="pill ' + (ok ? 'online' : 'offline') + '">' + esc(v) + '</span>') + '</div>';
+  $("sys").innerHTML = row("App", y.app, y.app === "OK") + row("Database", y.database, y.database === "OK") + row("Version", y.version) + row("Build", y.commit) + row("Uptime", fmtUp(y.uptime_seconds));
+}
+async function importCsv(file){
+  const box = $("impmsg");
+  if (!file) return;
+  box.textContent = "Importing " + file.name + "...";
+  const fd = new FormData();
+  fd.append("file", file);
+  try {
+    const r = await fetch("/import", {method: "POST", body: fd});
+    let j = {};
+    try { j = await r.json(); } catch (e) {}
+    if (!r.ok || j.error) { box.textContent = "Import failed: " + (j.error || "unexpected error"); return; }
+    box.textContent = "Import finished: " + j.added + " added, " + j.duplicates + " duplicate(s) skipped, " + j.invalid + " invalid." + (j.problems && j.problems.length ? " " + j.problems.join(" ") : "");
+    refresh();
+  } catch (e) {
+    box.textContent = "Import failed: could not reach the server.";
+  }
+}
+$("impf").addEventListener("change", e => { const f = e.target.files[0]; e.target.value = ""; importCsv(f); });
+
+function renderInsights(){
+  const l = S.insights || [];
+  $("ins").innerHTML = l.length ? '<ul class="insl">' + l.map(x => '<li>' + esc(x) + '</li>').join("") + '</ul>' : '<div class="empty">No insights yet.</div>';
+}
+
+function addMsg(who, text, extra){
+  const d = document.createElement("div");
+  d.className = "msg " + who;
+  d.textContent = text;
+  if (extra) d.appendChild(extra);
+  $("msgs").appendChild(d);
+  $("msgs").scrollTop = $("msgs").scrollHeight;
+}
+function devList(devs){
+  const w = document.createElement("div");
+  w.className = "dv";
+  devs.forEach(d => {
+    const r = document.createElement("div");
+    const p = document.createElement("span");
+    p.className = "pill " + d.status.toLowerCase();
+    p.textContent = d.status;
+    const t = document.createElement("span");
+    t.textContent = d.name + "   " + d.ip + "   " + (d.location || "-");
+    r.appendChild(p);
+    r.appendChild(t);
+    w.appendChild(r);
+  });
+  return w;
+}
+function confirmBox(pending){
+  const w = document.createElement("div");
+  w.className = "cf";
+  const y = document.createElement("button");
+  y.className = "btn";
+  y.textContent = "Confirm";
+  const n = document.createElement("button");
+  n.className = "btn ghost";
+  n.textContent = "Cancel";
+  y.onclick = () => { w.remove(); askServer({confirm: pending}); };
+  n.onclick = () => { w.remove(); addMsg("b", "Okay, cancelled."); };
+  w.appendChild(y);
+  w.appendChild(n);
+  return w;
+}
+async function askServer(body){
+  try {
+    const r = await fetch("/api/assistant", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
+    const j = await r.json();
+    let extra = null;
+    if (j.devices && j.devices.length) extra = devList(j.devices);
+    if (j.pending) {
+      const box = confirmBox(j.pending);
+      if (extra) extra.appendChild(box); else extra = box;
+    }
+    addMsg("b", j.reply || "No reply.", extra);
+    if (j.changed) refresh();
+  } catch (e) {
+    addMsg("b", "I could not reach the server. Try again in a moment.");
+  }
+}
+function sendMsg(t){
+  t = String(t || $("ask").value).trim();
+  if (!t) return;
+  $("ask").value = "";
+  addMsg("u", t);
+  askServer({message: t});
+}
+const SUGG = ["How many devices are offline?", "What needs attention?", "What changed recently?", "Show offline devices", "What is the network health?", "How does the pipeline work?", "What tech stack is used?"];
+$("sugg").innerHTML = SUGG.map(x => '<button class="sg" onclick="sendMsg(this.textContent)">' + esc(x) + '</button>').join("");
+$("askbtn").onclick = () => sendMsg();
+$("ask").addEventListener("keydown", e => { if (e.key === "Enter") sendMsg(); });
+addMsg("b", "Hi! I am the NetPulse assistant (rule-based). Ask me about devices, alerts or the project. I will ask you to confirm before changing anything.");
+(function(){
+  const a = document.createElement("a");
+  a.id = "n-assistant";
+  a.textContent = "🤖 Assistant";
+  a.onclick = () => show("assistant");
+  document.querySelector(".nav").appendChild(a);
+})();
+
+setTheme(document.documentElement.getAttribute("data-theme") || "dark");
+show(location.hash.slice(1) || "dashboard");
+renderAll();
+(function(){var t="Network Device Inventory",i=0,el=document.getElementById("tw");function type(){if(i<=t.length){el.textContent=t.slice(0,i++);setTimeout(type,90)}}type()})();
+</script></body></html>
